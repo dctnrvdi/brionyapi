@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -19,10 +19,18 @@ export default function IletisimClient({ settings }: { settings: Record<string, 
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
   const [error, setError] = useState('')
+  const [isMobile, setIsMobile] = useState(false)
 
-  const phone   = settings.contact_phone   || '+90 212 000 00 00'
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
+  const phone   = settings.contact_phone   || '+90 537 054 19 88'
   const email   = settings.contact_email   || 'info@brionyapi.com'
-  const address = settings.contact_address || 'İstanbul, Türkiye'
+  const address = settings.contact_address || 'İzmir, Türkiye'
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm(p => ({ ...p, [e.target.name]: e.target.value }))
@@ -49,7 +57,7 @@ export default function IletisimClient({ settings }: { settings: Record<string, 
   return (
     <main>
       {/* Header */}
-      <section style={{ paddingTop: 160, paddingBottom: 64 }}>
+      <section style={{ paddingTop: isMobile ? 120 : 160, paddingBottom: 64 }}>
         <div className="container-site">
           <div className="animate-fade-in" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
             <div style={{ width: 28, height: 1, background: '#E07820' }} />
@@ -64,11 +72,16 @@ export default function IletisimClient({ settings }: { settings: Record<string, 
       {/* Content */}
       <section className="section-pad" style={{ paddingTop: 0 }}>
         <div className="container-site">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 80, alignItems: 'start' }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : '1fr 1.4fr',
+            gap: isMobile ? 40 : 80,
+            alignItems: 'start',
+          }}>
 
             {/* Info */}
             <div>
-              <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.85, marginBottom: 48, fontFamily: 'var(--font-inter), sans-serif' }}>
+              <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.85, marginBottom: 40, fontFamily: 'var(--font-inter), sans-serif' }}>
                 Projeniz için bir görüşme ayarlamak ya da bilgi almak istiyorsanız, formu doldurun — size 24 saat içinde dönelim.
               </p>
               {[
@@ -85,7 +98,7 @@ export default function IletisimClient({ settings }: { settings: Record<string, 
 
             {/* Form */}
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
                 <div>
                   <label style={{ display: 'block', fontFamily: 'var(--font-syne), sans-serif', fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 6 }}>Ad Soyad *</label>
                   <input name="name" value={form.name} onChange={handleChange} onFocus={focus} onBlur={blur} style={inputStyle} />
@@ -95,7 +108,7 @@ export default function IletisimClient({ settings }: { settings: Record<string, 
                   <input name="email" type="email" value={form.email} onChange={handleChange} onFocus={focus} onBlur={blur} style={inputStyle} />
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
                 <div>
                   <label style={{ display: 'block', fontFamily: 'var(--font-syne), sans-serif', fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 6 }}>Telefon</label>
                   <input name="phone" value={form.phone} onChange={handleChange} onFocus={focus} onBlur={blur} style={inputStyle} />

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 
 type Project = {
@@ -26,27 +26,6 @@ function Reveal({ children, delay = 0, y = 48 }: { children: React.ReactNode; de
   return <div ref={ref}>{children}</div>
 }
 
-function RevealImage({ src, alt, style }: { src: string; alt: string; style?: React.CSSProperties }) {
-  const ref = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    el.style.opacity = '0'
-    el.style.transform = 'translateY(56px) scale(0.98)'
-    el.style.transition = 'opacity 1s cubic-bezier(0.25,0.46,0.45,0.94), transform 1s cubic-bezier(0.25,0.46,0.45,0.94)'
-    const io = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) { el.style.opacity = '1'; el.style.transform = 'translateY(0) scale(1)'; io.disconnect() }
-    }, { threshold: 0.04 })
-    io.observe(el)
-    return () => io.disconnect()
-  }, [])
-  return (
-    <div ref={ref} style={{ overflow: 'hidden', ...style }}>
-      <img src={src} alt={alt} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-    </div>
-  )
-}
-
 function isVideoUrl(url: string) {
   return /\.(mp4|mov|webm)$/i.test(url) || url.includes('/video/upload/')
 }
@@ -61,13 +40,20 @@ function MediaEl({ src, alt, className, style }: { src: string; alt: string; cla
 }
 
 export default function ProjeDetayClient({ project }: { project: Project }) {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
   const images: string[] = (() => {
     try { return JSON.parse(project.images) } catch { return [] }
   })()
   const allImages = [project.coverImage, ...images].filter(Boolean)
-
-  // Build image layout: alternating sizes
-  const galleryImages = allImages.slice(1) // skip cover, shown in hero
+  const galleryImages = allImages.slice(1)
 
   return (
     <main style={{ background: 'var(--dark)' }}>
@@ -93,7 +79,7 @@ export default function ProjeDetayClient({ project }: { project: Project }) {
         )}
 
         {/* Back button */}
-        <div style={{ position: 'absolute', top: 100, left: 0, right: 0, zIndex: 3 }}>
+        <div style={{ position: 'absolute', top: isMobile ? 72 : 100, left: 0, right: 0, zIndex: 3 }}>
           <div className="container-site">
             <Link href="/projeler" style={{
               display: 'inline-flex', alignItems: 'center', gap: 10,
@@ -114,7 +100,7 @@ export default function ProjeDetayClient({ project }: { project: Project }) {
         </div>
 
         {/* Title at bottom */}
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 3, padding: '0 0 52px' }}>
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 3, padding: isMobile ? '0 0 32px' : '0 0 52px' }}>
           <div className="container-site">
             <p className="animate-fade-in" style={{
               fontFamily: 'var(--font-syne), sans-serif', fontSize: 10, fontWeight: 700,
@@ -127,7 +113,7 @@ export default function ProjeDetayClient({ project }: { project: Project }) {
             </p>
             <h1 className="animate-fade-up" style={{
               fontFamily: 'var(--font-bebas), sans-serif',
-              fontSize: 'clamp(52px, 9vw, 120px)',
+              fontSize: 'clamp(40px, 9vw, 120px)',
               color: '#EBEBEB', lineHeight: 0.9, letterSpacing: '-1px',
             }}>
               {project.title.toUpperCase()}
@@ -144,7 +130,7 @@ export default function ProjeDetayClient({ project }: { project: Project }) {
         <div className="container-site">
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
+            gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
             gap: 2,
             background: 'rgba(255,255,255,0.04)',
           }}>
@@ -154,7 +140,7 @@ export default function ProjeDetayClient({ project }: { project: Project }) {
               { label: 'Alan', value: project.area },
               { label: 'Kategori', value: project.category },
             ].map(m => (
-              <div key={m.label} style={{ padding: '28px 24px', background: 'var(--dark-2)' }}>
+              <div key={m.label} style={{ padding: isMobile ? '20px 16px' : '28px 24px', background: 'var(--dark-2)' }}>
                 <p style={{
                   fontFamily: 'var(--font-syne), sans-serif', fontSize: 9, fontWeight: 700,
                   letterSpacing: '0.2em', textTransform: 'uppercase',
@@ -162,7 +148,7 @@ export default function ProjeDetayClient({ project }: { project: Project }) {
                 }}>{m.label}</p>
                 <p style={{
                   fontFamily: 'var(--font-bebas), sans-serif',
-                  fontSize: 18, letterSpacing: '0.06em',
+                  fontSize: isMobile ? 15 : 18, letterSpacing: '0.06em',
                   color: '#EBEBEB',
                 }}>{m.value}</p>
               </div>
@@ -173,13 +159,13 @@ export default function ProjeDetayClient({ project }: { project: Project }) {
 
       {/* ── DESCRIPTION ── */}
       {project.description && (
-        <section style={{ padding: '100px 0' }}>
+        <section style={{ padding: isMobile ? '48px 0' : '100px 0' }}>
           <div className="container-site">
             <div style={{ maxWidth: 720, margin: '0 auto' }}>
               <Reveal>
                 <p style={{
                   fontFamily: 'var(--font-inter), sans-serif',
-                  fontSize: 17, lineHeight: 1.85,
+                  fontSize: isMobile ? 15 : 17, lineHeight: 1.85,
                   color: 'rgba(255,255,255,0.55)',
                   letterSpacing: '0.01em',
                 }}>{project.description}</p>
@@ -191,7 +177,7 @@ export default function ProjeDetayClient({ project }: { project: Project }) {
 
       {/* ── GALLERY ── */}
       {allImages.length > 0 && (
-        <section style={{ paddingBottom: 120 }}>
+        <section style={{ paddingBottom: 80 }}>
           {/* First media: full width */}
           <Reveal y={60}>
             <div style={{ width: '100%', aspectRatio: '16/9', overflow: 'hidden', marginBottom: 2 }}>
@@ -215,10 +201,10 @@ export default function ProjeDetayClient({ project }: { project: Project }) {
             return chunks.map((chunk, ci) => (
               <div key={ci} style={{ marginTop: 2 }}>
                 {chunk.length === 2 ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 2 }}>
                     {chunk.map((url, ii) => (
-                      <Reveal key={ii} delay={ii * 0.1} y={56}>
-                        <div style={{ aspectRatio: '4/3', overflow: 'hidden' }}>
+                      <Reveal key={ii} delay={isMobile ? 0 : ii * 0.1} y={56}>
+                        <div style={{ aspectRatio: isMobile ? '16/9' : '4/3', overflow: 'hidden' }}>
                           <MediaEl src={url} alt="" style={{ transition: 'transform 0.8s ease' }} />
                         </div>
                       </Reveal>
@@ -226,7 +212,7 @@ export default function ProjeDetayClient({ project }: { project: Project }) {
                   </div>
                 ) : (
                   <Reveal y={56}>
-                    <div style={{ width: '100%', aspectRatio: '21/9', overflow: 'hidden' }}>
+                    <div style={{ width: '100%', aspectRatio: isMobile ? '16/9' : '21/9', overflow: 'hidden' }}>
                       <MediaEl src={chunk[0]} alt="" style={{ transition: 'transform 0.8s ease' }} />
                     </div>
                   </Reveal>
@@ -240,12 +226,18 @@ export default function ProjeDetayClient({ project }: { project: Project }) {
       {/* ── CTA / NEXT ── */}
       <section style={{
         borderTop: '1px solid rgba(255,255,255,0.06)',
-        padding: '80px 0',
+        padding: isMobile ? '48px 0' : '80px 0',
         background: 'var(--dark-2)',
       }}>
         <div className="container-site">
           <Reveal>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 24 }}>
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              justifyContent: isMobile ? 'flex-start' : 'space-between',
+              alignItems: isMobile ? 'flex-start' : 'center',
+              flexWrap: 'wrap', gap: 24,
+            }}>
               <div>
                 <p style={{
                   fontFamily: 'var(--font-syne), sans-serif', fontSize: 9, fontWeight: 700,

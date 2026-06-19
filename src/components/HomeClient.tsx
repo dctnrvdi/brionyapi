@@ -157,7 +157,7 @@ function ServiceCard({ sv, i }: { sv: ServiceItem; i: number }) {
 }
 
 // ── Services Section ────────────────────────────────────────────────────────
-function ServicesSection({ services, settings }: { services: ServiceItem[]; settings: Record<string, string> }) {
+function ServicesSection({ services, settings, isMobile }: { services: ServiceItem[]; settings: Record<string, string>; isMobile: boolean }) {
   const [lineVisible, setLineVisible] = useState(false)
   const sectionRef = useRef<HTMLElement>(null)
 
@@ -172,12 +172,12 @@ function ServicesSection({ services, settings }: { services: ServiceItem[]; sett
   }, [])
 
   return (
-    <section ref={sectionRef} style={{ padding: '100px 48px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+    <section ref={sectionRef} style={{ padding: isMobile ? '60px 20px' : '100px 48px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
       <div style={{ maxWidth: 1320, margin: '0 auto' }}>
 
         {/* Header */}
         <Reveal>
-          <div style={{ marginBottom: 64 }}>
+          <div style={{ marginBottom: isMobile ? 40 : 64 }}>
             <p style={{
               fontFamily: 'var(--font-syne), sans-serif', fontSize: 10, fontWeight: 700,
               letterSpacing: '0.22em', textTransform: 'uppercase', color: '#E07820',
@@ -206,8 +206,12 @@ function ServicesSection({ services, settings }: { services: ServiceItem[]; sett
           }} />
         </div>
 
-        {/* 4-column grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'rgba(255,255,255,0.04)' }}>
+        {/* Grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+          gap: 1, background: 'rgba(255,255,255,0.04)',
+        }}>
           {services.map((sv, i) => (
             <ServiceCard key={sv.num} sv={sv} i={i} />
           ))}
@@ -244,7 +248,7 @@ function isCoverVideo(url: string) {
   return /\.(mp4|mov|webm)$/i.test(url) || url.includes('/video/upload/')
 }
 
-// Single project card — fills its container (no aspect-ratio, height = parent)
+// Single project card — fills its container
 function ProjectCard({ project, index }: { project: Project; index: number }) {
   const [hov, setHov] = useState(false)
   const isVid = project.coverImage ? isCoverVideo(project.coverImage) : false
@@ -279,14 +283,25 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
 }
 
 // Row-based layout: equal heights per row, varying column widths
-// Pattern: [7|5] → [5|7] → [6|6] repeating
 const ROW_CONFIGS = [
   { heights: ['58.33%', '41.67%'], rowH: 540 },
   { heights: ['41.67%', '58.33%'], rowH: 540 },
   { heights: ['50%', '50%'],       rowH: 480 },
 ]
 
-function ProjectGrid({ projects }: { projects: Project[] }) {
+function ProjectGrid({ projects, isMobile }: { projects: Project[]; isMobile: boolean }) {
+  if (isMobile) {
+    return (
+      <div>
+        {projects.map((p, i) => (
+          <div key={p.id} style={{ height: 300, marginBottom: 2 }}>
+            <ProjectCard project={p} index={i} />
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   const rows: Project[][] = []
   let i = 0
   while (i < projects.length) {
@@ -300,7 +315,7 @@ function ProjectGrid({ projects }: { projects: Project[] }) {
       {rows.map((rowProjects, ri) => {
         const cfg = ROW_CONFIGS[ri % ROW_CONFIGS.length]
         return (
-          <div key={ri} style={{ display: 'flex', height: cfg.rowH, gap: 0, marginTop: ri === 0 ? 0 : 0 }}>
+          <div key={ri} style={{ display: 'flex', height: cfg.rowH, gap: 0 }}>
             {rowProjects.map((p, ci) => {
               const globalIdx = rows.slice(0, ri).reduce((s, r) => s + r.length, 0) + ci
               const width = rowProjects.length === 1 ? '100%' : cfg.heights[ci] || '50%'
@@ -324,6 +339,15 @@ export default function HomeClient({
   projects: Project[]
   settings: Record<string, string>
 }) {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
   const PILLAR_DEFAULTS = [
     { title: 'İLERİ GÖRÜŞLÜ', desc: 'Yarının şehirlerini bugünden planlıyoruz. Her projede uzun vadeli değer ve sürdürülebilirlik önceliğimiz.' },
     { title: 'KALİTE ODAKLI', desc: 'Malzeme seçiminden son detaya kadar ödün vermez standartlar. İlk seferinde doğru yapmak bizim için bir alışkanlık.' },
@@ -354,7 +378,12 @@ export default function HomeClient({
     <main>
 
       {/* ── HERO ── */}
-      <section style={{ height: '100svh', minHeight: 600, display: 'grid', gridTemplateRows: '1fr auto', padding: '0 48px', position: 'relative', overflow: 'hidden' }}>
+      <section style={{
+        height: '100svh', minHeight: 600,
+        display: 'grid', gridTemplateRows: '1fr auto',
+        padding: isMobile ? '0 20px' : '0 48px',
+        position: 'relative', overflow: 'hidden',
+      }}>
 
         {/* Video */}
         {settings.hero_video_url && (
@@ -379,20 +408,24 @@ export default function HomeClient({
         {/* Overlay */}
         <div style={{ position: 'absolute', inset: 0, zIndex: 1, background: hasMedia ? 'linear-gradient(to bottom, rgba(8,8,8,0.2) 0%, rgba(8,8,8,0) 35%, rgba(8,8,8,0.85) 100%)' : 'linear-gradient(to bottom, rgba(8,8,8,0.5) 0%, transparent 50%, rgba(8,8,8,0.65) 100%)' }} />
 
-        {/* Ghost text */}
-        <div style={{ position: 'absolute', right: '-2%', top: 0, bottom: 0, zIndex: 1, display: 'flex', alignItems: 'center', pointerEvents: 'none', overflow: 'hidden' }}>
-          <span style={{ fontFamily: 'var(--font-bebas), sans-serif', fontSize: 'clamp(160px, 24vw, 380px)', lineHeight: 1, color: 'transparent', WebkitTextStroke: '1px rgba(255,255,255,0.025)', letterSpacing: '-6px', whiteSpace: 'nowrap', userSelect: 'none' }}>BRION</span>
-        </div>
+        {/* Ghost text — desktop only */}
+        {!isMobile && (
+          <div style={{ position: 'absolute', right: '-2%', top: 0, bottom: 0, zIndex: 1, display: 'flex', alignItems: 'center', pointerEvents: 'none', overflow: 'hidden' }}>
+            <span style={{ fontFamily: 'var(--font-bebas), sans-serif', fontSize: 'clamp(160px, 24vw, 380px)', lineHeight: 1, color: 'transparent', WebkitTextStroke: '1px rgba(255,255,255,0.025)', letterSpacing: '-6px', whiteSpace: 'nowrap', userSelect: 'none' }}>BRION</span>
+          </div>
+        )}
 
-        {/* EST badge */}
-        <div className="animate-fade-in delay-600" style={{ position: 'absolute', top: '38%', right: 48, zIndex: 2, writingMode: 'vertical-rl', fontFamily: 'var(--font-syne), sans-serif', fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.12)' }}>EST. 2009</div>
+        {/* EST badge — desktop only */}
+        {!isMobile && (
+          <div className="animate-fade-in delay-600" style={{ position: 'absolute', top: '38%', right: 48, zIndex: 2, writingMode: 'vertical-rl', fontFamily: 'var(--font-syne), sans-serif', fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.12)' }}>EST. 2009</div>
+        )}
 
         {/* Content */}
         <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', paddingBottom: 20, paddingTop: 80 }}>
           <div className="animate-fade-in" style={{ fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#E07820', marginBottom: 44, fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700 }}>
             Mühendislik · İnşaat · Proje Geliştirme
           </div>
-          <h1 className="animate-fade-up delay-100" style={{ fontFamily: 'var(--font-bebas), sans-serif', fontSize: 'clamp(80px, 13vw, 180px)', lineHeight: 0.88, letterSpacing: '-2px', color: '#EBEBEB', margin: 0 }}>
+          <h1 className="animate-fade-up delay-100" style={{ fontFamily: 'var(--font-bebas), sans-serif', fontSize: 'clamp(56px, 13vw, 180px)', lineHeight: 0.88, letterSpacing: '-2px', color: '#EBEBEB', margin: 0 }}>
             {heroTitle.split('\n').map((line, i, arr) => (
               <span key={i} style={{ display: 'block' }}>
                 {i === arr.length - 1 ? <em style={{ fontStyle: 'normal', WebkitTextStroke: '1.5px #EBEBEB', color: 'transparent' }}>{line}</em> : line}
@@ -402,9 +435,19 @@ export default function HomeClient({
         </div>
 
         {/* Bottom bar */}
-        <div className="animate-fade-up delay-300" style={{ position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', padding: '28px 0 52px', borderTop: '1px solid rgba(255,255,255,0.07)', marginTop: 28 }}>
+        <div className="animate-fade-up delay-300" style={{
+          position: 'relative', zIndex: 2,
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          justifyContent: isMobile ? 'flex-start' : 'space-between',
+          alignItems: isMobile ? 'flex-start' : 'flex-end',
+          gap: isMobile ? 20 : 0,
+          padding: isMobile ? '20px 0 40px' : '28px 0 52px',
+          borderTop: '1px solid rgba(255,255,255,0.07)',
+          marginTop: 28,
+        }}>
           <p style={{ fontSize: 13, lineHeight: 1.9, color: 'rgba(255,255,255,0.35)', maxWidth: 320, fontFamily: 'var(--font-inter), sans-serif' }}>{heroSub}</p>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 16 }}>
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'row' : 'column', alignItems: isMobile ? 'center' : 'flex-end', gap: 16, flexWrap: 'wrap' }}>
             {[{ href: '/iletisim', label: 'İletişime Geç' }, { href: '/projeler', label: 'Tüm Projeler' }].map(({ href, label }) => (
               <Link key={href} href={href} style={{ display: 'inline-flex', alignItems: 'center', gap: 10, fontSize: 10, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', textDecoration: 'none', fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, transition: 'color 0.2s' }}
                 onMouseEnter={e => (e.currentTarget.style.color = '#E07820')}
@@ -424,9 +467,17 @@ export default function HomeClient({
       {/* ── VİZYON ── */}
       <section style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'var(--dark-2)' }}>
         {/* Manifesto */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+        }}>
           <Reveal>
-            <div style={{ padding: '80px 56px', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{
+              padding: isMobile ? '48px 20px' : '80px 56px',
+              borderRight: isMobile ? 'none' : '1px solid rgba(255,255,255,0.06)',
+              borderBottom: isMobile ? '1px solid rgba(255,255,255,0.06)' : 'none',
+            }}>
               <p style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#E07820', marginBottom: 28, display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ width: 28, height: 1, background: '#E07820', display: 'inline-block' }} />
                 Vizyonumuz
@@ -443,7 +494,7 @@ export default function HomeClient({
             </div>
           </Reveal>
           <Reveal delay={0.15}>
-            <div style={{ padding: '80px 56px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+            <div style={{ padding: isMobile ? '40px 20px' : '80px 56px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
               <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 16, lineHeight: 1.85, color: 'rgba(255,255,255,0.45)', maxWidth: 420 }}>
                 {visionText}
               </p>
@@ -458,10 +509,14 @@ export default function HomeClient({
         </div>
 
         {/* Pillar cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'rgba(255,255,255,0.04)' }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+          gap: 1, background: 'rgba(255,255,255,0.04)',
+        }}>
           {pillars.map((p, i) => (
             <Reveal key={i} delay={i * 0.08}>
-              <div style={{ padding: '36px 28px', background: 'var(--dark-2)', height: '100%', transition: 'background 0.3s', cursor: 'default' }}
+              <div style={{ padding: isMobile ? '24px 16px' : '36px 28px', background: 'var(--dark-2)', height: '100%', transition: 'background 0.3s', cursor: 'default' }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'rgba(224,120,32,0.025)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'var(--dark-2)')}
               >
@@ -474,11 +529,17 @@ export default function HomeClient({
         </div>
       </section>
 
-      {/* ── PROJECTS — row-based equal heights ── */}
-      <section style={{ paddingTop: 100 }}>
-        <div style={{ padding: '0 48px', maxWidth: 1320, margin: '0 auto 56px' }}>
+      {/* ── PROJECTS ── */}
+      <section style={{ paddingTop: isMobile ? 60 : 100 }}>
+        <div style={{ padding: isMobile ? '0 20px' : '0 48px', maxWidth: 1320, margin: `0 auto ${isMobile ? 36 : 56}px` }}>
           <Reveal>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              justifyContent: isMobile ? 'flex-start' : 'space-between',
+              alignItems: isMobile ? 'flex-start' : 'flex-end',
+              gap: isMobile ? 12 : 0,
+            }}>
               <div>
                 <p style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#E07820', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ width: 28, height: 1, background: '#E07820', display: 'inline-block' }} />
@@ -497,20 +558,20 @@ export default function HomeClient({
         </div>
 
         {projects.length === 0
-          ? <div style={{ padding: '60px 48px', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase' }}>Henüz proje eklenmemiş.</div>
-          : <ProjectGrid projects={projects} />
+          ? <div style={{ padding: isMobile ? '40px 20px' : '60px 48px', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase' }}>Henüz proje eklenmemiş.</div>
+          : <ProjectGrid projects={projects} isMobile={isMobile} />
         }
       </section>
 
       {/* ── SERVICES ── */}
-      <ServicesSection services={services} settings={settings} />
+      <ServicesSection services={services} settings={settings} isMobile={isMobile} />
 
       {/* ── CTA ── */}
-      <section style={{ padding: '120px 48px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', position: 'relative' }}>
+      <section style={{ padding: isMobile ? '72px 20px' : '120px 48px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', position: 'relative' }}>
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 500, height: 300, background: 'radial-gradient(ellipse, rgba(224,120,32,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
         <Reveal>
           <h2 style={{ fontFamily: 'var(--font-bebas), sans-serif', fontSize: 'clamp(52px, 9vw, 120px)', lineHeight: 0.92, letterSpacing: '-1px', color: '#EBEBEB', position: 'relative' }}>
-            {ctaTitle.split('\n').map((line, i, arr) => (
+            {ctaTitle.split('\n').map((line, i) => (
               <span key={i} style={{ display: 'block' }}>
                 {i === 1 ? <em style={{ fontStyle: 'normal', color: '#E07820', textShadow: '0 0 40px rgba(224,120,32,0.25)' }}>{line}</em> : line}
               </span>

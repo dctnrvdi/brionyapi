@@ -25,7 +25,7 @@ function Reveal({ children, delay = 0, fill = false }: { children: React.ReactNo
   return <div ref={ref} style={fill ? { height: '100%' } : undefined}>{children}</div>
 }
 
-// Repeating column-span pattern (no ratio — heights fixed by grid-auto-rows)
+// Repeating column-span pattern for 12-col desktop grid
 const SPANS = [
   'span 7',
   'span 5',
@@ -39,8 +39,8 @@ function isCoverVideo(url: string) {
   return /\.(mp4|mov|webm)$/i.test(url) || url.includes('/video/upload/')
 }
 
-function ProjectCard({ project, index }: { project: Project; index: number }) {
-  const col = SPANS[index % SPANS.length]
+function ProjectCard({ project, index, isMobile }: { project: Project; index: number; isMobile: boolean }) {
+  const col = isMobile ? undefined : SPANS[index % SPANS.length]
   const [hovered, setHovered] = useState(false)
   const isVid = project.coverImage ? isCoverVideo(project.coverImage) : false
 
@@ -110,11 +110,13 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
 
             {/* Info */}
             <div style={{
-              position: 'absolute', bottom: 0, left: 0, right: 0, padding: '28px 32px', zIndex: 3,
+              position: 'absolute', bottom: 0, left: 0, right: 0,
+              padding: isMobile ? '16px 16px' : '28px 32px',
+              zIndex: 3,
               transform: hovered ? 'translateY(0)' : 'translateY(8px)',
               transition: 'transform 0.4s ease',
             }}>
-              <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
                 <span style={{
                   fontFamily: 'var(--font-syne), sans-serif',
                   fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase',
@@ -123,7 +125,7 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
               </div>
               <h3 style={{
                 fontFamily: 'var(--font-bebas), sans-serif',
-                fontSize: 'clamp(22px, 3vw, 38px)',
+                fontSize: isMobile ? 'clamp(18px, 5vw, 26px)' : 'clamp(22px, 3vw, 38px)',
                 color: '#EBEBEB', letterSpacing: '0.02em', lineHeight: 1, marginBottom: 4,
               }}>{project.title.toUpperCase()}</h3>
               <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-inter), sans-serif' }}>
@@ -141,6 +143,15 @@ const cats = ['Tümü', 'Konut', 'Ticari', 'Karma', 'Altyapı']
 
 export default function ProjelerClient({ projects }: { projects: Project[] }) {
   const [active, setActive] = useState('Tümü')
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
   const filtered = active === 'Tümü' ? projects : projects.filter(p => p.category === active)
 
   return (
@@ -169,7 +180,7 @@ export default function ProjelerClient({ projects }: { projects: Project[] }) {
           <div style={{ display: 'flex', overflowX: 'auto' }}>
             {cats.map(cat => (
               <button key={cat} onClick={() => setActive(cat)} style={{
-                padding: '18px 28px',
+                padding: isMobile ? '14px 16px' : '18px 28px',
                 background: 'none', border: 'none',
                 fontFamily: 'var(--font-syne), sans-serif',
                 fontSize: 10, fontWeight: 700,
@@ -185,11 +196,19 @@ export default function ProjelerClient({ projects }: { projects: Project[] }) {
       </div>
 
       {/* Grid */}
-      <section style={{ padding: '4px 0 120px' }}>
+      <section style={{ padding: '4px 0 80px' }}>
         <div className="container-site" style={{ paddingLeft: 0, paddingRight: 0, maxWidth: '100%' }}>
           {filtered.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '80px 0', color: 'rgba(255,255,255,0.2)', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+            <div style={{ textAlign: 'center', padding: '80px 20px', color: 'rgba(255,255,255,0.2)', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
               Bu kategoride proje bulunmuyor.
+            </div>
+          ) : isMobile ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '0 2px' }}>
+              {filtered.map((p, i) => (
+                <div key={p.id} style={{ height: 300 }}>
+                  <ProjectCard project={p} index={i} isMobile={true} />
+                </div>
+              ))}
             </div>
           ) : (
             <div style={{
@@ -200,7 +219,7 @@ export default function ProjelerClient({ projects }: { projects: Project[] }) {
               padding: '0 2px',
             }}>
               {filtered.map((p, i) => (
-                <ProjectCard key={p.id} project={p} index={i} />
+                <ProjectCard key={p.id} project={p} index={i} isMobile={false} />
               ))}
             </div>
           )}
