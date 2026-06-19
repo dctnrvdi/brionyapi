@@ -10,10 +10,13 @@ export default function Footer() {
     fetch('/api/ayarlar').then(r => r.json()).then(setS).catch(() => {})
   }, [])
 
-  const phone   = s.footer_phone   || '+90 212 000 00 00'
-  const email   = s.footer_email   || 'info@brionyapi.com'
-  const address = s.footer_address || 'İstanbul, Türkiye'
-  const tagline = s.footer_tagline || 'Mühendislik · Güven · Kalıcılık'
+  const phone     = s.footer_phone     || '+90 537 054 19 88'
+  const email     = s.footer_email     || 'info@brionyapi.com'
+  const address   = s.footer_address   || 'İzmir, Türkiye'
+  const tagline   = s.footer_tagline   || 'Mühendislik · Güven · Kalıcılık'
+  const instagram = s.social_instagram || ''
+  const linkedin  = s.social_linkedin  || ''
+  const twitter   = s.social_x        || ''
 
   return (
     <footer style={{ background: 'var(--dark-2)', borderTop: '1px solid var(--border-subtle)' }}>
@@ -36,23 +39,29 @@ export default function Footer() {
               <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.75, maxWidth: 240 }}>
                 Güçlü temeller, kalıcı yapılar. Mühendislik mükemmelliğiyle inşa ediyoruz.
               </p>
-              <div style={{ marginTop: 24, display: 'flex', gap: 12 }}>
-                {/* Social placeholder — icon squares */}
-                {['in', 'ig', 'x'].map(ico => (
-                  <div key={ico} style={{
-                    width: 32, height: 32,
-                    border: '1px solid var(--border-subtle)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer', transition: 'border-color 0.25s',
-                    color: 'var(--text-muted)', fontSize: 10,
-                    fontFamily: 'var(--font-syne), sans-serif',
-                    fontWeight: 700, letterSpacing: '0.05em',
-                  }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#E07820'; (e.currentTarget as HTMLElement).style.color = '#E07820' }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-subtle)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-muted)' }}
-                  >{ico.toUpperCase()}</div>
-                ))}
-              </div>
+              {(instagram || linkedin || twitter) && (
+                <div style={{ marginTop: 24, display: 'flex', gap: 12 }}>
+                  {[
+                    { href: instagram, label: 'IG' },
+                    { href: linkedin,  label: 'IN' },
+                    { href: twitter,   label: 'X'  },
+                  ].filter(s => s.href).map(s => (
+                    <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" style={{
+                      width: 32, height: 32,
+                      border: '1px solid var(--border-subtle)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      textDecoration: 'none',
+                      color: 'var(--text-muted)', fontSize: 10,
+                      fontFamily: 'var(--font-syne), sans-serif',
+                      fontWeight: 700, letterSpacing: '0.05em',
+                      transition: 'border-color 0.25s, color 0.25s',
+                    }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#E07820'; (e.currentTarget as HTMLElement).style.color = '#E07820' }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-subtle)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-muted)' }}
+                    >{s.label}</a>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Sayfalar */}

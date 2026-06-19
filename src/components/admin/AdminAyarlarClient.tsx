@@ -84,6 +84,9 @@ export default function AdminAyarlarClient({ settings }: { settings: Record<stri
     about_tab_4_image: init('about_tab_4_image'),
     contact_phone: init('contact_phone'), contact_email: init('contact_email'), contact_address: init('contact_address'),
     footer_phone: init('footer_phone'), footer_email: init('footer_email'), footer_address: init('footer_address'), footer_tagline: init('footer_tagline'),
+    social_instagram: init('social_instagram'),
+    social_linkedin:  init('social_linkedin'),
+    social_x:         init('social_x'),
   })
 
   const hc = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setForm(p => ({ ...p, [e.target.name]: e.target.value }))
@@ -215,6 +218,11 @@ export default function AdminAyarlarClient({ settings }: { settings: Record<stri
           </div>
           <div><label style={L}>Adres</label><input name="footer_address" value={form.footer_address} onChange={hc} onFocus={foc} onBlur={blu} style={I} /></div>
           <div><label style={L}>Alt Slogan</label><input name="footer_tagline" value={form.footer_tagline} onChange={hc} onFocus={foc} onBlur={blu} style={I} /></div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+            <div><label style={L}>Instagram URL</label><input name="social_instagram" value={form.social_instagram} onChange={hc} onFocus={foc} onBlur={blu} style={I} placeholder="https://instagram.com/..." /></div>
+            <div><label style={L}>LinkedIn URL</label><input name="social_linkedin" value={form.social_linkedin} onChange={hc} onFocus={foc} onBlur={blu} style={I} placeholder="https://linkedin.com/..." /></div>
+            <div><label style={L}>X (Twitter) URL</label><input name="social_x" value={form.social_x} onChange={hc} onFocus={foc} onBlur={blu} style={I} placeholder="https://x.com/..." /></div>
+          </div>
         </Section>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
