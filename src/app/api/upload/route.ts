@@ -9,6 +9,9 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 })
 
+// Vercel Hobby: 4.5MB request limit — allow up to 4MB here
+export const maxDuration = 60
+
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session) return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 })
@@ -17,6 +20,11 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData()
     const file = formData.get('file') as File | null
     if (!file) return NextResponse.json({ error: 'Dosya bulunamadı.' }, { status: 400 })
+
+    // Reject files over 4MB to stay within Vercel's 4.5MB body limit
+    if (file.size > 4 * 1024 * 1024) {
+      return NextResponse.json({ error: 'Dosya 4MB\'dan büyük olamaz.' }, { status: 413 })
+    }
 
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)

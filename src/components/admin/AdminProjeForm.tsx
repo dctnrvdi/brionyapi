@@ -26,7 +26,7 @@ const L: React.CSSProperties = {
   color: 'var(--text-muted)', marginBottom: 6,
 }
 
-// Upload multiple files in parallel, show per-file progress
+// Upload files one at a time to avoid Vercel serverless limits
 function MultiUpload({ onAdd, accept = 'all' }: { onAdd: (urls: string[]) => void; accept?: 'all' | 'image' | 'video' }) {
   const [done, setDone] = useState(0)
   const [total, setTotal] = useState(0)
@@ -36,21 +36,43 @@ function MultiUpload({ onAdd, accept = 'all' }: { onAdd: (urls: string[]) => voi
 
   const acceptStr = accept === 'image' ? 'image/*' : accept === 'video' ? 'video/*' : 'image/*,video/*'
 
+  const compress = (file: File): Promise<File> => new Promise(resolve => {
+    if (!file.type.startsWith('image/') || file.size <= 3 * 1024 * 1024) { resolve(file); return }
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      const MAX = 1920
+      let { width, height } = img
+      if (width > MAX || height > MAX) {
+        if (width > height) { height = Math.round(height * MAX / width); width = MAX }
+        else { width = Math.round(width * MAX / height); height = MAX }
+      }
+      const canvas = document.createElement('canvas')
+      canvas.width = width; canvas.height = height
+      canvas.getContext('2d')!.drawImage(img, 0, 0, width, height)
+      canvas.toBlob(blob => {
+        resolve(blob ? new File([blob], file.name, { type: 'image/jpeg' }) : file)
+      }, 'image/jpeg', 0.82)
+    }
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file) }
+    img.src = url
+  })
+
   const uploadAll = async (files: File[]) => {
     setDone(0); setErrors(0); setTotal(files.length)
-    const results = await Promise.all(
-      files.map(async file => {
-        try {
-          const fd = new FormData()
-          fd.append('file', file)
-          const res = await fetch('/api/upload', { method: 'POST', body: fd })
-          const data = await res.json()
-          if (data.url) { setDone(d => d + 1); return data.url as string }
-          setErrors(e => e + 1); return null
-        } catch { setErrors(e => e + 1); return null }
-      })
-    )
-    const urls = results.filter((u): u is string => !!u)
+    const urls: string[] = []
+    for (const file of files) {
+      try {
+        const compressed = await compress(file)
+        const fd = new FormData()
+        fd.append('file', compressed)
+        const res = await fetch('/api/upload', { method: 'POST', body: fd })
+        const data = await res.json()
+        if (data.url) { setDone(d => d + 1); urls.push(data.url) }
+        else setErrors(e => e + 1)
+      } catch { setErrors(e => e + 1) }
+    }
     onAdd(urls)
     setTimeout(() => setTotal(0), 1200)
   }
