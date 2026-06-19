@@ -65,7 +65,7 @@ export default function MediaUpload({ value, onChange, accept = 'all' }: Props) 
               Dosyayı buraya sürükleyin veya tıklayın
             </p>
             <p style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-inter), sans-serif' }}>
-              {accept === 'image' ? 'JPG, PNG, WEBP' : accept === 'video' ? 'MP4, MOV' : 'Resim veya Video'}
+              {accept === 'image' ? 'JPG, PNG, WEBP, GIF' : accept === 'video' ? 'MP4, MOV' : 'JPG, PNG, GIF, MP4, MOV'}
             </p>
           </>
         )}

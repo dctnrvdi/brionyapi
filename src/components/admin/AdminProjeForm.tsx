@@ -37,7 +37,8 @@ function MultiUpload({ onAdd, accept = 'all' }: { onAdd: (urls: string[]) => voi
   const acceptStr = accept === 'image' ? 'image/*' : accept === 'video' ? 'video/*' : 'image/*,video/*'
 
   const compress = (file: File): Promise<File> => new Promise(resolve => {
-    if (!file.type.startsWith('image/') || file.size <= 3 * 1024 * 1024) { resolve(file); return }
+    // Skip GIFs (canvas would destroy animation) and small files
+    if (!file.type.startsWith('image/') || file.type === 'image/gif' || file.size <= 3 * 1024 * 1024) { resolve(file); return }
     const img = new Image()
     const url = URL.createObjectURL(file)
     img.onload = () => {
@@ -128,7 +129,7 @@ function MultiUpload({ onAdd, accept = 'all' }: { onAdd: (urls: string[]) => voi
               Birden fazla dosya seçin veya buraya sürükleyin
             </p>
             <p style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-inter), sans-serif' }}>
-              {accept === 'image' ? 'JPG, PNG, WEBP' : accept === 'video' ? 'MP4, MOV' : 'Resim + Video — Çoklu seçim desteklenir'}
+              {accept === 'image' ? 'JPG, PNG, WEBP, GIF' : accept === 'video' ? 'MP4, MOV' : 'JPG, PNG, GIF, MP4 — Çoklu seçim desteklenir'}
             </p>
           </>
         )}
