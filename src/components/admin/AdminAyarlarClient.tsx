@@ -94,8 +94,10 @@ export default function AdminAyarlarClient({ settings }: { settings: Record<stri
   const blu = (e: React.FocusEvent) => { (e.target as HTMLElement).style.borderColor = 'var(--border-subtle)' }
   const setUrl = (key: string) => (url: string) => setForm(p => ({ ...p, [key]: url }))
 
+  const [saveError, setSaveError] = useState('')
+
   const handleSubmit = async () => {
-    setLoading(true); setSaved(false)
+    setLoading(true); setSaved(false); setSaveError('')
     try {
       const res = await fetch('/api/ayarlar', {
         method: 'POST',
@@ -103,7 +105,8 @@ export default function AdminAyarlarClient({ settings }: { settings: Record<stri
         body: JSON.stringify(form),
       })
       if (res.ok) { setSaved(true); router.refresh(); setTimeout(() => setSaved(false), 3000) }
-    } catch { /* ignore */ }
+      else { const d = await res.json().catch(() => ({})); setSaveError(d.error || `Hata: ${res.status}`) }
+    } catch (e) { setSaveError('Bağlantı hatası.') }
     setLoading(false)
   }
 
@@ -230,6 +233,7 @@ export default function AdminAyarlarClient({ settings }: { settings: Record<stri
             {loading ? 'Kaydediliyor...' : 'Kaydet'}
           </button>
           {saved && <p style={{ fontSize: 12, color: '#E07820', fontFamily: 'var(--font-syne), sans-serif', fontWeight: 600 }}>✓ Kaydedildi</p>}
+          {saveError && <p style={{ fontSize: 12, color: '#ff5555', fontFamily: 'var(--font-syne), sans-serif' }}>✗ {saveError}</p>}
         </div>
       </div>
     </div>
