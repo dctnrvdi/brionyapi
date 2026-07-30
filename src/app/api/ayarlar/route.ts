@@ -28,7 +28,8 @@ export async function POST(req: NextRequest) {
       })
     }
     return NextResponse.json({ ok: true })
-  } catch {
-    return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e)
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
