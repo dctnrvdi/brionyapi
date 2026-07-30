@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
+import { prisma } from '@/lib/prisma'
 
-const prisma = new PrismaClient()
 const SECRET = 'brion-reset-7x9k2'
 
 export async function GET(req: NextRequest) {
