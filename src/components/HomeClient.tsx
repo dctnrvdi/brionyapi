@@ -387,9 +387,7 @@ export default function HomeClient({
 
         {/* Video */}
         {settings.hero_video_url && (
-          <video autoPlay muted loop playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, filter: 'brightness(0.4)' }}>
-            <source src={settings.hero_video_url} type="video/mp4" />
-          </video>
+          <video src={settings.hero_video_url} autoPlay muted loop playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, filter: 'brightness(0.4)' }} />
         )}
         {/* Image fallback */}
         {!settings.hero_video_url && settings.hero_image_url && (
